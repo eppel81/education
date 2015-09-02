@@ -89,5 +89,5 @@ def main(startX = 0, startY = 0, sideLength = 200, deep = 5):
 	startTriangle = triangleDrawer(startX, startY, sideLength)	#стартовый треугольник (dict)
 	cutter(deep, startTriangle)
 
-
-main(-200, -100, 400, 5)
+if __name__ == '__main__':
+	main(-200, -100, 400, 5)

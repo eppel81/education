@@ -2,6 +2,7 @@
 
 import turtle as t
 
+
 # Функция строит треугольник. Принимает в качестве параметров координаты 
 # левой вершины (кортеж с координатами X Y), длину стороны и текущий уровень
 # вложенности (уровень определяет цвет заливки треугольника)
@@ -27,6 +28,18 @@ def triangleDrawer(leftCornerCoord, sideSize, deep=5):
 	t.forward(sideSize)
 	t.end_fill()
 
+
+def movePointer(angle, sideSize):
+	"""
+	Передвигает указатель на нужное расстояние и под нужным углом
+	
+	"""
+	t.setheading(angle)
+	t.penup()
+	t.forward(sideSize)
+	t.pendown()	
+	
+
 # Функция строит три треульника с длиной стороны вдвое меньшей родительского.
 # Расчет позиции левых вершин треугольников исходит из длины стороны и угла.
 # Сначала строит треугольник №1 в левой вершине родительского треугольника. 
@@ -43,33 +56,22 @@ def serpTriangleDrawer(leftCornerCoord, sideSize, deep=5):
 		
 		triangleDrawer(triagDict['firstTriangleCoord'], sideSize, deep)
 		
-		t.setheading(initAngle)
-		t.penup()
-		t.forward(sideSize)
+		movePointer(initAngle,sideSize)
 		triagDict['secTriangleCoord'] = t.pos()
-		t.pendown()
 		triangleDrawer(triagDict['secTriangleCoord'], sideSize, deep)
 		
-		t.setheading(-initAngle)
-		t.penup()
-		t.forward(sideSize)
+		movePointer(-initAngle,sideSize)
 		triagDict['thirdTriangleCoord'] = t.pos()
-		t.pendown()
 		triangleDrawer(triagDict['thirdTriangleCoord'], sideSize, deep)
 
 		for key in triagDict:
 			serpTriangleDrawer(triagDict[key], sideSize/2, deep-1)
 
 
-def main():
-	
-	l = (-100,0,)
-	side = 300
-	deep = 5
-
+def main(coord=(-100,0), sideLength=300, deep=5):
 	t.speed(10)
-	triangleDrawer(l, side)
-	serpTriangleDrawer(l, side/2, deep)
+	triangleDrawer(coord, sideLength)
+	serpTriangleDrawer(coord, sideLength/2, deep)
 
 
 if __name__ == '__main__':
