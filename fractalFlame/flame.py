@@ -26,14 +26,14 @@ def calc_afin_koeff(kol_afin_preobr):
     i = 0
     while i < kol_afin_preobr:
         tmp_dict = {}
+
+        # Инициализируем коэффициенты заведомо неправильными значениями
         a = 2
         b = 2
-        c = 2
         d = 2
         e = 2
-        f = 2
 
-        while (a * a + d * d) > 1:
+        while (a*a + d*d) > 1:
             a = random.random()
             d = rand_num(a * a, KOEF_RANGE_MAX)
             # выбираем диапазон от -2 до 1, чтобы было равное количество
@@ -41,13 +41,13 @@ def calc_afin_koeff(kol_afin_preobr):
             if random.randint(-2, 1) < 0:
                 d = -d
 
-        while (b * b + e * e) > 1:
+        while (b*b + e*e) > 1:
             b = random.random()
             e = rand_num(b * b, KOEF_RANGE_MAX)
             if random.randint(-2, 1) < 0:
                 e = -e
 
-        if (a * a + b * b + d * d + e * e) < (1 + (a * e - b * d) * (a * e - b * d)):
+        if (a*a + b*b + d*d + e*e) < (1 + (a*e - b*d)*(a*e - b*d)):
             # формируем словарь с коэффициентами и добавляем в список
             i += 1
 
