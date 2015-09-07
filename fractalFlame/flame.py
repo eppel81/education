@@ -6,7 +6,6 @@ import random
 
 import math
 
-
 XMIN = -1.777
 XMAX = 1.777
 YMIN = -1
@@ -17,16 +16,16 @@ KOEF_RANGE_MAX = 1
 
 
 # Функция генерирует случайное число в дипазоне
-def rand_num(lo=-1, hi= 1):
-    return (lo + (hi - lo)*random.random())
+def rand_num(lo=-1, hi=1):
+    return lo + (hi - lo) * random.random()
 
 
 # Функция рассчитывает коээфициенты афинных преобразований
-def calc_afin_koeff(KolAfinPreobr):
-    AfinPreobrList = []
+def calc_afin_koeff(kol_afin_preobr):
+    afin_preobr_list = []
     i = 0
-    while(i < KolAfinPreobr):
-        TmpDict = {}
+    while i < kol_afin_preobr:
+        tmp_dict = {}
         a = 2
         b = 2
         c = 2
@@ -34,82 +33,92 @@ def calc_afin_koeff(KolAfinPreobr):
         e = 2
         f = 2
 
-        while((a*a + d*d) > 1):
+        while (a * a + d * d) > 1:
             a = random.random()
-            d = rand_num(a*a, KOEF_RANGE_MAX)
+            d = rand_num(a * a, KOEF_RANGE_MAX)
             # выбираем диапазон от -2 до 1, чтобы было равное количество
             # отриц. и положит. чисел, т.е. равноверноятное появление
-            if (random.randint(-2,1) < 0):
+            if random.randint(-2, 1) < 0:
                 d = -d
 
-        while((b*b + e*e) > 1):
+        while (b * b + e * e) > 1:
             b = random.random()
-            e = rand_num(b*b, KOEF_RANGE_MAX)
-            if (random.randint(-2,1) < 0):
+            e = rand_num(b * b, KOEF_RANGE_MAX)
+            if random.randint(-2, 1) < 0:
                 e = -e
 
-
-        if ((a*a + b*b + d*d + e*e) < (1 + (a*e - b*d)*(a*e - b*d))):
+        if (a * a + b * b + d * d + e * e) < (1 + (a * e - b * d) * (a * e - b * d)):
             # формируем словарь с коэффициентами и добавляем в список
             i += 1
 
-            TmpDict['a'] = a
-            TmpDict['b'] = b
-            TmpDict['c'] = rand_num(-1, 1)
-            if (random.randint(-2,1) < 0):
-                c = -c
-            TmpDict['d'] = d
-            TmpDict['e'] = e
-            TmpDict['f'] =  rand_num(-1, 1)
-            if (random.randint(-2,1) < 0):
-                f = -f
+            tmp_dict['a'] = a
+            tmp_dict['b'] = b
+            tmp_dict['c'] = rand_num(-1, 1)
+            if random.randint(-2, 1) < 0:
+                tmp_dict['c'] = -tmp_dict['c']
+            tmp_dict['d'] = d
+            tmp_dict['e'] = e
+            tmp_dict['f'] = rand_num(-1, 1)
+            if random.randint(-2, 1) < 0:
+                tmp_dict['f'] = -tmp_dict['f']
 
             # Выбираем случайным образом цвет стартового пикселя
-            TmpDict['red'] = random.randint(1, 255)
-            TmpDict['green'] = random.randint(1, 255)
-            TmpDict['blue'] = random.randint(1, 255)
+            tmp_dict['red'] = random.randint(1, 255)
+            tmp_dict['green'] = random.randint(1, 255)
+            tmp_dict['blue'] = random.randint(1, 255)
 
-            AfinPreobrList.append(TmpDict)
+            afin_preobr_list.append(tmp_dict)
 
-    return AfinPreobrList
+    return afin_preobr_list
 
 
 # Функция рисует точку в нужном месте и нужным цветом
-def draw_point(x, y, r, g, b):
+def draw_point(x, y, r=1, g=1, b=1):
     turtle.penup()
     turtle.setpos(x, y)
     turtle.pendown()
-    turtle.color(r,g,b)
+    turtle.pencolor(r, g, b)
     turtle.dot()
+    # print 'Точка с координатами [%f, %f]' % turtle.pos()
 
 
 # Функция отрисовки изображения
-def render(CountPoint=10000, KolAfinPreobr=16, Iter=1000, xRes=1920, yRes=1080):
+def render(count_point=20000, kol_afin_preobr=16, num_iter=1000, x_res=1920, y_res=1080):
+    """
 
-    AfinsPreobrList = calc_afin_koeff(KolAfinPreobr)
+    Функция рисует точки с учетом афинных преобразований
+    """
+    # инициализируем экран чтобы координата 0,0 лажала в нижнем левом углу
+    turtle.setworldcoordinates(0, 0, x_res - 1, y_res - 1)
+    turtle.colormode(255)
+    turtle.speed(10)
+
+    # Создаем список коэффициентов афинных преобразований
+    afins_preobr_list = calc_afin_koeff(kol_afin_preobr)
 
     # Задаем словарь данных для свойств пикселя
-    PixelProp = {'r' : 0, 'g' : 0, 'b' : 0, 'counter' : 0}
+    pixel_property = {'r': 0, 'g': 0, 'b': 0, 'counter': 0}
 
-    # Формируем матрицу пикселей
-    xRow = [PixelProp for i in range(xRes)]
-    PixelList = [xRow for i in range(yRes)]
+    # Формируем матрицу пикселей для сохранения их свойств
+    y_row = [pixel_property for i in range(y_res)]
+    pixel_list = [y_row for i in range(x_res)]
 
-    for num in range(CountPoint):
-        NewX = rand_num(XMIN, XMAX)
-        NewY = rand_num(YMIN, YMAX)
+    # рисуем точки на экране
+    for num in range(count_point):
+        new_x = rand_num(XMIN, XMAX)
+        new_y = rand_num(YMIN, YMAX)
 
-        for step in range(-20, Iter):
-            i = random.randint(0, KolAfinPreobr-1)
+        for step in range(-20, num_iter):
+            i = random.randint(0, kol_afin_preobr - 1)
 
-            x = (AfinsPreobrList[i]['a']*NewX +
-                AfinsPreobrList[i]['b']*NewY + AfinsPreobrList[i]['c'])
-            y = (AfinsPreobrList[i]['d']*NewX +
-                AfinsPreobrList[i]['e']*NewY + AfinsPreobrList[i]['f'])
+            x = (afins_preobr_list[i]['a'] * new_x +
+                 afins_preobr_list[i]['b'] * new_y + afins_preobr_list[i]['c'])
+            y = (afins_preobr_list[i]['d'] * new_x +
+                 afins_preobr_list[i]['e'] * new_y + afins_preobr_list[i]['f'])
 
             # применяем линейное преобразование
-            NewX = x
-            NewY = y
+            new_x = x
+            new_y = y
 
             if step > 0:
                 theta2 = 0
@@ -117,40 +126,39 @@ def render(CountPoint=10000, KolAfinPreobr=16, Iter=1000, xRes=1920, yRes=1080):
 
                 for sym in range(1, symmetry):
 
-                    #theta2 += (2*math.pi)/sym
+                    theta2 += (2*math.pi)/sym
 
-                    x_rot = NewX*math.cos(theta2) - NewY*math.sin(theta2)
-                    y_rot = NewX*math.sin(theta2) + NewY*math.cos(theta2)
+                    x_rot = new_x * math.cos(theta2) - new_y * math.sin(theta2)
+                    y_rot = new_x * math.sin(theta2) + new_y * math.cos(theta2)
 
                     if (x_rot >= XMIN and x_rot <= XMAX
-                            and	y_rot >= YMIN and y_rot <= YMAX):
+                            and y_rot >= YMIN and y_rot <= YMAX):
 
-                        x1 = xRes - int(((XMAX - x_rot)/(XMAX - XMIN))*xRes)
-                        y1 = yRes - int(((YMAX - y_rot)/(YMAX - YMIN))*yRes)
+                        x1 = x_res - int(((XMAX - x_rot) / (XMAX - XMIN)) * x_res)
+                        y1 = y_res - int(((YMAX - y_rot) / (YMAX - YMIN)) * y_res)
 
-                        #print '[%f, %f]' % (x1, y1)
+                        # print '[%f, %f]' % (x1, y1)
 
-
-                        if (x1 < xRes and y1 < yRes):
+                        if x1 < x_res and y1 < y_res:
 
                             # проверяем первый раз попали в точку или нет
-                            if PixelList[x1][y1]['counter'] == 0:
-                                PixelList[x1][y1]['r'] = AfinsPreobrList[i]['red']
-                                PixelList[x1][y1]['g'] = AfinsPreobrList[i]['green']
-                                PixelList[x1][y1]['b'] = AfinsPreobrList[i]['blue']
+                            if pixel_list[x1][y1]['counter'] == 0:
+                                pixel_list[x1][y1]['r'] = afins_preobr_list[i]['red']
+                                pixel_list[x1][y1]['g'] = afins_preobr_list[i]['green']
+                                pixel_list[x1][y1]['b'] = afins_preobr_list[i]['blue']
                             else:
-                                PixelList[x1][y1]['r'] = ((PixelList[x1][y1]['r'] +
-                                                      AfinsPreobrList[i]['red'])/2)
-                                PixelList[x1][y1]['g'] = ((PixelList[x1][y1]['g'] +
-                                                      AfinsPreobrList[i]['green'])/2)
-                                PixelList[x1][y1]['b'] = ((PixelList[x1][y1]['b'] +
-                                                      AfinsPreobrList[i]['blue'])/2)
+                                pixel_list[x1][y1]['r'] = ((pixel_list[x1][y1]['r'] +
+                                                           afins_preobr_list[i]['red']) / 2)
+                                pixel_list[x1][y1]['g'] = ((pixel_list[x1][y1]['g'] +
+                                                           afins_preobr_list[i]['green']) / 2)
+                                pixel_list[x1][y1]['b'] = ((pixel_list[x1][y1]['b'] +
+                                                           afins_preobr_list[i]['blue']) / 2)
 
                             # отрисовываем точку на экране
-                            draw_point(x1, y1, PixelList[x1][y1]['r'],
-                                       PixelList[x1][y1]['g'], PixelList[x1][y1]['b'])
+                            draw_point(x1, y1, pixel_list[x1][y1]['r'],
+                                       pixel_list[x1][y1]['g'], pixel_list[x1][y1]['b'])
 
-                            PixelList[x1][y1]['counter'] += 1
+                            pixel_list[x1][y1]['counter'] += 1
 
 
 def main():
