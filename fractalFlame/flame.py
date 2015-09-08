@@ -11,41 +11,121 @@ XMAX = 1.777
 YMIN = -1
 YMAX = 1
 
-KOEF_RANGE_MIN = -1
-KOEF_RANGE_MAX = 1
+COEFF_RANGE_MIN = -1
+COEFF_RANGE_MAX = 1
+
+X_RES = 1920
+Y_RES = 1080
 
 
-# Функция генерирует случайное число в дипазоне
-def rand_num(lo=-1, hi=1):
-    return lo + (hi - lo) * random.random()
+def select_afin_transform(num):
+    """
+    Функция выбирает нужное афинное преобразование по его номеру.
+    Результатом возвращается функция
+    """
+
+    def linear(x, y):
+        """
+        Фунцкция возвращает параметры для линейного преобразования
+        """
+        new_x = x
+        new_y = y
+        return new_x, new_y
 
 
-# Функция рассчитывает коээфициенты афинных преобразований
-def calc_afin_koeff(kol_afin_preobr):
-    afin_preobr_list = []
+    def sinusoidal(x, y):
+        """
+        Фунцкция возвращает параметры для синусоидального преобразования
+        """
+        new_x = math.sin(x)
+        new_y = math.sin(y)
+        return new_x, new_y
+
+
+    def spherical(x, y):
+        """
+        Фунцкция возвращает параметры для сферического преобразования
+        """
+        r = 1.0 / (x*x + y*y)
+        new_x = r * x
+        new_y = r * y
+        return new_x, new_y
+
+
+    def swirl(x, y):
+        """
+        Фунцкция возвращает параметры для сферического преобразования
+        """
+        r = x*x + y*y
+        new_x = x*math.sin(r) - y*math.cos(r)
+        new_y = x*math.cos(r) + y*math.sin(r)
+        return new_x, new_y
+
+    # связываем ключи словаря с функциями, возвращающими параметры афинн. преобр.
+    type_afin_transform = {
+        0: linear,
+        1: sinusoidal,
+        2: spherical,
+        3: swirl
+    }
+
+    return type_afin_transform[num]
+
+def calc_rand_coeff():
+    """
+
+    Функция подбирает случайным образом пару коэффициентов и проверяет
+    неравенство, заданное условием подбора коэффициентов. Возвращает кортеж.
+    """
+
+    # Выбрали 1000 попыток подбора коэффициентов, чтобы не зациклиться.
+    max_steps = 1000
+
     i = 0
-    while i < kol_afin_preobr:
+    k1 = 2
+    k2 = 2
+    while ((k1*k1 + k2*k2) > 1) and i < max_steps:
+        k1 = random.random()
+        k2 = random.uniform(k1*k1, COEFF_RANGE_MAX)
+
+        # выбираем диапазон от -2 до 1, чтобы было равное количество
+        # отриц. и положит. чисел, т.е. равноверноятное появление
+        if random.randint(-2, 1) < 0:
+            k2 = -k2
+        i += 1
+
+    # если за 1000 шагов не нашли значение, то прерываемся
+    if i >= max_steps:
+        return False
+    else:
+        return k1, k2
+
+
+def calc_afin_coeff(count_afin_transforms):
+    """
+
+    Функция рассчитывает коээфициенты афинных преобразований и вовращает список или False.
+    """
+    afin_transform_list = []
+    i = 0
+    while i < count_afin_transforms:
         tmp_dict = {}
 
-        # Инициализируем коэффициенты заведомо неправильными значениями
-        a = 2
-        b = 2
-        d = 2
-        e = 2
+        # расчет a, d коэффициентов. Если False, то возвращаем False
+        coeff = calc_rand_coeff()
+        if (coeff):
+            a = coeff[0]
+            d = coeff[1]
+        else:
+            return False
 
-        while (a*a + d*d) > 1:
-            a = random.random()
-            d = rand_num(a * a, KOEF_RANGE_MAX)
-            # выбираем диапазон от -2 до 1, чтобы было равное количество
-            # отриц. и положит. чисел, т.е. равноверноятное появление
-            if random.randint(-2, 1) < 0:
-                d = -d
-
-        while (b*b + e*e) > 1:
-            b = random.random()
-            e = rand_num(b * b, KOEF_RANGE_MAX)
-            if random.randint(-2, 1) < 0:
-                e = -e
+        # расчет b, e коэффициентов. Если False, то возвращаем False
+        coeff  = calc_rand_coeff()
+        if coeff:
+            b = coeff[0]
+            e = coeff[1]
+        else:
+            return False
 
         if (a*a + b*b + d*d + e*e) < (1 + (a*e - b*d)*(a*e - b*d)):
             # формируем словарь с коэффициентами и добавляем в список
@@ -53,12 +133,12 @@ def calc_afin_koeff(kol_afin_preobr):
 
             tmp_dict['a'] = a
             tmp_dict['b'] = b
-            tmp_dict['c'] = rand_num(-1, 1)
+            tmp_dict['c'] = random.uniform(-1, 1)
             if random.randint(-2, 1) < 0:
                 tmp_dict['c'] = -tmp_dict['c']
             tmp_dict['d'] = d
             tmp_dict['e'] = e
-            tmp_dict['f'] = rand_num(-1, 1)
+            tmp_dict['f'] = random.uniform(-1, 1)
             if random.randint(-2, 1) < 0:
                 tmp_dict['f'] = -tmp_dict['f']
 
@@ -67,62 +147,62 @@ def calc_afin_koeff(kol_afin_preobr):
             tmp_dict['green'] = random.randint(1, 255)
             tmp_dict['blue'] = random.randint(1, 255)
 
-            afin_preobr_list.append(tmp_dict)
+            afin_transform_list.append(tmp_dict)
 
-    return afin_preobr_list
-
-
-# Функция рисует точку в нужном месте и нужным цветом
-def draw_point(x, y, r=1, g=1, b=1):
-    turtle.penup()
-    turtle.setpos(x, y)
-    turtle.pendown()
-    turtle.pencolor(r, g, b)
-    turtle.dot()
-    # print 'Точка с координатами [%f, %f]' % turtle.pos()
+    return afin_transform_list
 
 
-# Функция отрисовки изображения
-def render(count_point=20000, kol_afin_preobr=16, num_iter=1000, x_res=1920, y_res=1080):
+# # Функция рисует точку в нужном месте и нужным цветом
+# def draw_point2(x, y, r=1, g=1, b=1):
+#     turtle.penup()
+#     turtle.setpos(x, y)
+#     turtle.pendown()
+#     turtle.pencolor(r, g, b)
+#     turtle.dot()
+
+
+def render_pixels(count_point=20000, count_afin_transforms=16, num_iter=1000, transform_mode=3):
     """
 
-    Функция рисует точки с учетом афинных преобразований
+    Функция возвращает матрицу точек с учетом цвета и афинных преобразований
     """
+
     # инициализируем экран чтобы координата 0,0 лажала в нижнем левом углу
-    turtle.setworldcoordinates(0, 0, x_res - 1, y_res - 1)
-    turtle.colormode(255)
-    turtle.speed(10)
+    # turtle.setworldcoordinates(0, 0, X_RES - 1, Y_RES - 1)
+    # turtle.colormode(255)
+    # turtle.speed(10)
 
     # Создаем список коэффициентов афинных преобразований
-    afins_preobr_list = calc_afin_koeff(kol_afin_preobr)
+    afins_transform_list = calc_afin_coeff(count_afin_transforms)
 
     # Задаем словарь данных для свойств пикселя
     pixel_property = {'r': 0, 'g': 0, 'b': 0, 'counter': 0}
 
     # Формируем матрицу пикселей для сохранения их свойств
-    y_row = [pixel_property for i in range(y_res)]
-    pixel_list = [y_row for i in range(x_res)]
+    y_row = [pixel_property for i in range(Y_RES)]
+    pixel_list = [y_row for i in range(X_RES)]
 
-    # рисуем точки на экране
+    # просчитываем точки в матрице
     for num in range(count_point):
-        new_x = rand_num(XMIN, XMAX)
-        new_y = rand_num(YMIN, YMAX)
+        new_x = random.uniform(XMIN, XMAX)
+        new_y = random.uniform(YMIN, YMAX)
 
         for step in range(-20, num_iter):
-            i = random.randint(0, kol_afin_preobr - 1)
+            i = random.randint(0, count_afin_transforms - 1)
 
-            x = (afins_preobr_list[i]['a'] * new_x +
-                 afins_preobr_list[i]['b'] * new_y + afins_preobr_list[i]['c'])
-            y = (afins_preobr_list[i]['d'] * new_x +
-                 afins_preobr_list[i]['e'] * new_y + afins_preobr_list[i]['f'])
+            x = (afins_transform_list[i]['a'] * new_x +
+                 afins_transform_list[i]['b'] * new_y + afins_transform_list[i]['c'])
+            y = (afins_transform_list[i]['d'] * new_x +
+                 afins_transform_list[i]['e'] * new_y + afins_transform_list[i]['f'])
 
-            # применяем линейное преобразование
-            new_x = x
-            new_y = y
+            # применяем заданное афинное преобразование
+            tmp = select_afin_transform(transform_mode)(x, y)
+            new_x = tmp[0]
+            new_y = tmp[1]
 
             if step > 0:
                 theta2 = 0
-                symmetry = 2
+                symmetry = 3
 
                 for sym in range(1, symmetry):
 
@@ -131,39 +211,67 @@ def render(count_point=20000, kol_afin_preobr=16, num_iter=1000, x_res=1920, y_r
                     x_rot = new_x * math.cos(theta2) - new_y * math.sin(theta2)
                     y_rot = new_x * math.sin(theta2) + new_y * math.cos(theta2)
 
-                    if (x_rot >= XMIN and x_rot <= XMAX
-                            and y_rot >= YMIN and y_rot <= YMAX):
+                    if x_rot >= XMIN and x_rot <= XMAX and y_rot >= YMIN and y_rot <= YMAX:
 
-                        x1 = x_res - int(((XMAX - x_rot) / (XMAX - XMIN)) * x_res)
-                        y1 = y_res - int(((YMAX - y_rot) / (YMAX - YMIN)) * y_res)
+                        x1 = X_RES - int(((XMAX - x_rot) / (XMAX - XMIN)) * X_RES)
+                        y1 = Y_RES - int(((YMAX - y_rot) / (YMAX - YMIN)) * Y_RES)
 
-                        # print '[%f, %f]' % (x1, y1)
-
-                        if x1 < x_res and y1 < y_res:
+                        if x1 < X_RES and y1 < Y_RES:
 
                             # проверяем первый раз попали в точку или нет
                             if pixel_list[x1][y1]['counter'] == 0:
-                                pixel_list[x1][y1]['r'] = afins_preobr_list[i]['red']
-                                pixel_list[x1][y1]['g'] = afins_preobr_list[i]['green']
-                                pixel_list[x1][y1]['b'] = afins_preobr_list[i]['blue']
+                                pixel_list[x1][y1]['r'] = afins_transform_list[i]['red']
+                                pixel_list[x1][y1]['g'] = afins_transform_list[i]['green']
+                                pixel_list[x1][y1]['b'] = afins_transform_list[i]['blue']
                             else:
                                 pixel_list[x1][y1]['r'] = ((pixel_list[x1][y1]['r'] +
-                                                           afins_preobr_list[i]['red']) / 2)
+                                                           afins_transform_list[i]['red']) / 2)
                                 pixel_list[x1][y1]['g'] = ((pixel_list[x1][y1]['g'] +
-                                                           afins_preobr_list[i]['green']) / 2)
+                                                           afins_transform_list[i]['green']) / 2)
                                 pixel_list[x1][y1]['b'] = ((pixel_list[x1][y1]['b'] +
-                                                           afins_preobr_list[i]['blue']) / 2)
-
-                            # отрисовываем точку на экране
-                            draw_point(x1, y1, pixel_list[x1][y1]['r'],
-                                       pixel_list[x1][y1]['g'], pixel_list[x1][y1]['b'])
+                                                           afins_transform_list[i]['blue']) / 2)
 
                             pixel_list[x1][y1]['counter'] += 1
+                            # draw_point2(x1, y1, pixel_list[x1][y1]['r'], pixel_list[x1][y1]['g'],
+                            #             pixel_list[x1][y1]['b'])
+    return pixel_list
+
+
+def draw_points(matrix):
+    """
+
+    Функция рисует точки в соответствии с переданной матрицей свойств пикселей.
+    """
+    # инициализируем экран чтобы координата 0,0 лажала в нижнем левом углу
+    turtle.setworldcoordinates(0, 0, X_RES - 1, Y_RES - 1)
+    turtle.colormode(255)
+    turtle.speed(10)
+    turtle.pensize(1)
+
+    for x in range(len(matrix)):
+        for y in range(len(matrix[x])):
+            turtle.penup()
+            turtle.setpos(x, y)
+            turtle.pendown()
+            turtle.pencolor(matrix[x][y]['r'], matrix[x][y]['g'],
+                            matrix[x][y]['b'])
+            turtle.dot()
+            # print 'Точка с координатами [%f, %f]' % turtle.pos()
 
 
 def main():
-    lst = calc_afin_koeff(16)
-    print lst
+    """
+
+    Точка входа
+    """
+    # получаем матрицу свойств пикселей. Результат м. б. False если
+    # не удалось вычмслить коэффициенты (маловероятно)
+    pixel_matrix = render_pixels()
+
+    if pixel_matrix:
+        draw_points(pixel_matrix)
+    else:
+        print 'Не получилось подобрать коэффициенты. Попробуйте еще раз.'
 
 
 if __name__ == '__main__':
