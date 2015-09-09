@@ -6,6 +6,11 @@ import random
 
 import math
 
+import json
+
+import argparse
+
+
 XMIN = -1.777
 XMAX = 1.777
 YMIN = -1
@@ -21,7 +26,7 @@ Y_RES = 1080
 def select_afin_transform(num):
     """
     Функция выбирает нужное афинное преобразование по его номеру.
-    Результатом возвращается функция
+    Результатом возвращается функция, расчитывающая нужные координаты
     """
 
     def linear(x, y):
@@ -54,7 +59,7 @@ def select_afin_transform(num):
 
     def swirl(x, y):
         """
-        Фунцкция возвращает параметры для сферического преобразования
+        Фунцкция возвращает параметры для преобразования Свирла
         """
         r = x*x + y*y
         new_x = x*math.sin(r) - y*math.cos(r)
@@ -152,7 +157,7 @@ def calc_afin_coeff(count_afin_transforms):
     return afin_transform_list
 
 
-# # Функция рисует точку в нужном месте и нужным цветом
+# Функция рисует точку в нужном месте и нужным цветом
 # def draw_point2(x, y, r=1, g=1, b=1):
 #     turtle.penup()
 #     turtle.setpos(x, y)
@@ -161,7 +166,7 @@ def calc_afin_coeff(count_afin_transforms):
 #     turtle.dot()
 
 
-def render_pixels(count_point=20000, count_afin_transforms=16, num_iter=1000, transform_mode=3):
+def render_pixels(args, count_afin_transforms=16, count_point=1000, num_iter=1000, transform_mode=3):
     """
 
     Функция возвращает матрицу точек с учетом цвета и афинных преобразований
@@ -172,10 +177,22 @@ def render_pixels(count_point=20000, count_afin_transforms=16, num_iter=1000, tr
     # turtle.colormode(255)
     # turtle.speed(10)
 
-    # Создаем список коэффициентов афинных преобразований
-    afins_transform_list = calc_afin_coeff(count_afin_transforms)
+    # если есть параметр l, то загружаем из файла
+    if args.l:
+        afins_transform_list = read_coeff_from_file(args.l)
+    else:
+        # Создаем список расчетных коэффициентов афинных преобразований
+        afins_transform_list = calc_afin_coeff(count_afin_transforms)
 
-    # Задаем словарь данных для свойств пикселя
+    # если есть параметр s, то сохраняем коэффициенты в файл
+    if args.s:
+        save_coeff_to_file(args.s, afins_transform_list)
+
+    # если есть параметр type, то задаем тип преобразования (по умолчанию 0 - линейный)
+    if args.type:
+        transform_mode = args.type
+
+    # Задаем словарь данных для свойств одного пикселя
     pixel_property = {'r': 0, 'g': 0, 'b': 0, 'counter': 0}
 
     # Формируем матрицу пикселей для сохранения их свойств
@@ -195,7 +212,7 @@ def render_pixels(count_point=20000, count_afin_transforms=16, num_iter=1000, tr
             y = (afins_transform_list[i]['d'] * new_x +
                  afins_transform_list[i]['e'] * new_y + afins_transform_list[i]['f'])
 
-            # применяем заданное афинное преобразование
+            # Здесь вызываем ф-ю, возвращающую функцию нужного преобразования
             tmp = select_afin_transform(transform_mode)(x, y)
             new_x = tmp[0]
             new_y = tmp[1]
@@ -259,17 +276,51 @@ def draw_points(matrix):
             # print 'Точка с координатами [%f, %f]' % turtle.pos()
 
 
+def save_coeff_to_file(fname, coeff_dict):
+    """
+    Функция сохраняет в json-формате параметры афинных преобразований в файл
+    """
+    f = open(fname, 'w')
+    try:
+        json.dump(coeff_dict, f)
+    except Exception:
+        return False
+    finally:
+        f.close()
+
+
+def read_coeff_from_file(fname):
+    """
+    Функция читает из файла параметры афинных преобразований
+    """
+    try:
+        return json.load(file(fname))
+    except Exception:
+        return False
+
+
 def main():
     """
 
-    Точка входа
+    Точка входа в приложение. В качестве опциональных параметров задаются:
+        -s 'имя файла' - для сохранения коэффициентов афинных преобразований;
+        -l 'имя файла' - для загрузки коэффициентов из файла
+        --type - тип преобразования (0 - линейное, 1 - синусоидальное, 2 - сферическое
+                                     3 - преобразование Свирла)
     """
-    # получаем матрицу свойств пикселей. Результат м. б. False если
-    # не удалось вычмслить коэффициенты (маловероятно)
-    pixel_matrix = render_pixels()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', help='file to save afin transformation coefficients', type=str)
+    parser.add_argument('-l', help='load afin transformation coefficients from file', type=str)
+    parser.add_argument('--type', help='type of transformation', type=int)
+    args = parser.parse_args()
+
+    # Получаем матрицу свойств пикселей. Результат м.б. False если не удалось вычислить коэффициенты.
+    # В render_pixels передаем только параметры командной строки, остальные - по умолчанию.
+    pixel_matrix = render_pixels(args)
 
     if pixel_matrix:
         draw_points(pixel_matrix)
+        pass
     else:
         print 'Не получилось подобрать коэффициенты. Попробуйте еще раз.'
 
