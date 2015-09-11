@@ -22,7 +22,10 @@ COEFF_RANGE_MAX = 1
 X_RES = 888
 Y_RES = 500
 
-COUNT_AFIN_TRANSFORMS = 16
+# X_RES = 1920
+# Y_RES = 1080
+
+COUNT_AFIN_TRANSFORMS = 5
 
 
 def select_afin_transform(num):
@@ -168,7 +171,7 @@ def calc_afin_coeff(count_afin_transforms):
 #     turtle.dot()
 
 
-def render_pixels(afins_transform_list, count_point=50000, num_iter=500, transform_mode=1):
+def render_pixels(afins_transform_list, count_point=10000, num_iter=1000, transform_mode=2):
     """
 
     Функция возвращает матрицу точек с учетом цвета и афинных преобразований
@@ -180,7 +183,7 @@ def render_pixels(afins_transform_list, count_point=50000, num_iter=500, transfo
     # turtle.speed(10)
 
     # Задаем словарь данных для свойств одного пикселя
-    pixel_property = {'r': 0, 'g': 0, 'b': 0, 'counter': 0}
+    pixel_property = {'r': 0, 'g': 0, 'b': 0, 'counter': 0, 'normal': 0}
 
     # Формируем матрицу пикселей для сохранения их свойств
     # y_row = [pixel_property for i in range(Y_RES)]
@@ -207,7 +210,7 @@ def render_pixels(afins_transform_list, count_point=50000, num_iter=500, transfo
 
             if step > 0:
                 theta2 = 0
-                symmetry = 3
+                symmetry = 2
 
                 for sym in range(1, symmetry):
 
@@ -240,6 +243,31 @@ def render_pixels(afins_transform_list, count_point=50000, num_iter=500, transfo
                             # draw_point2(x1, y1, pixel_list[x1][y1]['r'], pixel_list[x1][y1]['g'],
                             #             pixel_list[x1][y1]['b'])
     return pixel_list
+
+
+def correction(pixel_matrix):
+    """
+    Функция выполняет коррекцию яркости каждого пикселя матрицы пикселей
+    """
+    max_value = 0.0
+    gamma = 2.2
+
+    # Пройдемся по матрице. Каждый элемент матрицы - это словарь свойств пикселя
+    for col in pixel_matrix:
+        for pixel in col:
+            if pixel['counter'] != 0:
+                pixel['normal'] = math.log10(pixel['counter'])
+                if pixel['normal'] > max_value:
+                    max_value = pixel['normal']
+
+    for col in pixel_matrix:
+        for pixel in col:
+            pixel['normal'] /= max_value
+            pixel['r'] = (pixel['r'] * math.pow(pixel['normal'], (1.0 / gamma)))
+            pixel['g'] = (pixel['g'] * math.pow(pixel['normal'], (1.0 / gamma)))
+            pixel['b'] = (pixel['b'] * math.pow(pixel['normal'], (1.0 / gamma)))
+
+    return pixel_matrix
 
 
 def draw_points(matrix):
@@ -322,8 +350,8 @@ def main():
         afins_transform_list = calc_afin_coeff(COUNT_AFIN_TRANSFORMS)
 
     # если есть параметр s, то сохраняем коэффициенты в файл
-    if args.s:
-        save_coeff_to_file(args.s, afins_transform_list)
+    # if args.s:
+    #     save_coeff_to_file(args.s, afins_transform_list)
 
     # если есть параметр type, то задаем тип преобразования (по умолчанию 0 - линейный)
     if args.type:
@@ -344,9 +372,15 @@ def main():
     pixel_matrix = render_pixels(afins_transform_list)
 
     if pixel_matrix:
+        correction(pixel_matrix)
         draw_points(pixel_matrix)
     else:
         print 'Не получилось подобрать коэффициенты. Попробуйте еще раз.'
+
+    s = raw_input('Сохранить? Y/N')
+
+    if s.lower() == 'y':
+        save_coeff_to_file('coeff.txt', afins_transform_list)
 
 
 if __name__ == '__main__':
