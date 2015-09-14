@@ -42,7 +42,6 @@ def select_afin_transform(num):
         new_y = y
         return new_x, new_y
 
-
     def sinusoidal(x, y):
         """
         Фунцкция возвращает параметры для синусоидального преобразования
@@ -50,7 +49,6 @@ def select_afin_transform(num):
         new_x = math.sin(x)
         new_y = math.sin(y)
         return new_x, new_y
-
 
     def spherical(x, y):
         """
@@ -60,7 +58,6 @@ def select_afin_transform(num):
         new_x = r * x
         new_y = r * y
         return new_x, new_y
-
 
     def swirl(x, y):
         """
@@ -80,6 +77,7 @@ def select_afin_transform(num):
     }
 
     return type_afin_transform[num]
+
 
 def calc_rand_coeff():
     """
@@ -123,14 +121,14 @@ def calc_afin_coeff(count_afin_transforms):
 
         # расчет a, d коэффициентов. Если False, то возвращаем False
         coeff = calc_rand_coeff()
-        if (coeff):
+        if coeff:
             a = coeff[0]
             d = coeff[1]
         else:
             return False
 
         # расчет b, e коэффициентов. Если False, то возвращаем False
-        coeff  = calc_rand_coeff()
+        coeff = calc_rand_coeff()
         if coeff:
             b = coeff[0]
             e = coeff[1]
@@ -298,7 +296,7 @@ def save_coeff_to_file(fname, coeff_dict):
     try:
         with open(fname, 'w') as f:
             json.dump(coeff_dict, f)
-    except:
+    except Exception:
         return False
 
 
