@@ -19,8 +19,8 @@ YMAX = 1
 COEFF_RANGE_MIN = -1
 COEFF_RANGE_MAX = 1
 
-X_RES = 888
-Y_RES = 500
+# X_RES = 888
+# Y_RES = 500
 
 # X_RES = 1920
 # Y_RES = 1080
@@ -171,14 +171,14 @@ def calc_afin_coeff(count_afin_transforms):
 #     turtle.dot()
 
 
-def render_pixels(afins_transform_list, count_point=10000, num_iter=1000, transform_mode=2):
+def render_pixels(afins_transform_list, x_res=888, y_res=500, transform_mode=2, num_iter=1000, count_point=10000):
     """
 
     Функция возвращает матрицу точек с учетом цвета и афинных преобразований
     """
 
     # инициализируем экран чтобы координата 0,0 лажала в нижнем левом углу
-    # turtle.setworldcoordinates(0, 0, X_RES - 1, Y_RES - 1)
+    # turtle.setworldcoordinates(0, 0, x_res - 1, y_res - 1)
     # turtle.colormode(255)
     # turtle.speed(10)
 
@@ -186,10 +186,7 @@ def render_pixels(afins_transform_list, count_point=10000, num_iter=1000, transf
     pixel_property = {'r': 0, 'g': 0, 'b': 0, 'counter': 0, 'normal': 0}
 
     # Формируем матрицу пикселей для сохранения их свойств
-    # y_row = [pixel_property for i in range(Y_RES)]
-    # pixel_list = [y_row for i in range(X_RES)]
-
-    pixel_list = [[dict(pixel_property) for i in range(Y_RES)] for j in range(X_RES)]
+    pixel_list = [[dict(pixel_property) for i in range(y_res)] for j in range(x_res)]
 
     for num in range(count_point):
         new_x = random.uniform(XMIN, XMAX)
@@ -221,10 +218,10 @@ def render_pixels(afins_transform_list, count_point=10000, num_iter=1000, transf
 
                     if x_rot >= XMIN and x_rot <= XMAX and y_rot >= YMIN and y_rot <= YMAX:
 
-                        x1 = X_RES - int(((XMAX - x_rot) / (XMAX - XMIN)) * X_RES)
-                        y1 = Y_RES - int(((YMAX - y_rot) / (YMAX - YMIN)) * Y_RES)
+                        x1 = x_res - int(((XMAX - x_rot) / (XMAX - XMIN)) * x_res)
+                        y1 = y_res - int(((YMAX - y_rot) / (YMAX - YMIN)) * y_res)
 
-                        if x1 < X_RES and y1 < Y_RES:
+                        if x1 < x_res and y1 < y_res:
 
                             # проверяем первый раз попали в точку или нет
                             if pixel_list[x1][y1]['counter'] == 0:
@@ -270,13 +267,13 @@ def correction(pixel_matrix):
     return pixel_matrix
 
 
-def draw_points(matrix):
+def draw_points(matrix, x_res, y_res):
     """
 
     Функция рисует точки в соответствии с переданной матрицей свойств пикселей.
     """
     # инициализируем экран чтобы координата 0,0 лажала в нижнем левом углу
-    turtle.setworldcoordinates(0, 0, X_RES - 1, Y_RES - 1)
+    turtle.setworldcoordinates(0, 0, x_res - 1, y_res - 1)
     turtle.colormode(255)
     turtle.speed(10)
     turtle.pensize(1)
@@ -329,7 +326,7 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', help='load afin transformation coefficients from file', type=str)
-    parser.add_argument('-s', help='file to save afin transformation coefficients', type=str)
+    # parser.add_argument('-s', help='file to save afin transformation coefficients', type=str)
     parser.add_argument('--type', help='type of transformation', choices=range(4))
     parser.add_argument('-i', help='amount of iterations', type=int)
     parser.add_argument('-x', help='number of points on the x-axis', type=int)
@@ -349,33 +346,44 @@ def main():
         # Создаем список расчетных коэффициентов афинных преобразований
         afins_transform_list = calc_afin_coeff(COUNT_AFIN_TRANSFORMS)
 
-    # если есть параметр s, то сохраняем коэффициенты в файл
-    # if args.s:
-    #     save_coeff_to_file(args.s, afins_transform_list)
-
     # если есть параметр type, то задаем тип преобразования (по умолчанию 0 - линейный)
-    if args.type:
-        transform_mode = args.type
+    transform_mode = args.type if args.type else 0
+    # if args.type:
+    #     transform_mode = args.type
+    # else:
+    #     transform_mode = 0
 
     # если есть параметр i, то задаем количество итераций
-    if args.i:
-        num_iter = args.i
+    num_iter = args.i if args.i else 1000
+    # if args.i:
+    #     num_iter = args.i
+    # else:
+    #     num_iter = 1000
 
-    if args.x:
-        x_res = args.x
+    # если есть параметр -x, то задаем размер изображения по оси Х
+    x_res = args.x if args.x else 888
+    # if args.x:
+    #     x_res = args.x
+    # else:
+    #     x_res = 888
 
-    if args.y:
-        x_res = args.y
+    # если есть параметр -y, то задаем размер изображения по оси Y
+    y_res = args.y if args.y else 500
+    # if args.y:
+    #     y_res = args.y
+    # else:
+    #     y_res = 500
 
     # Получаем матрицу свойств пикселей. Результат м.б. False если не удалось вычислить коэффициенты.
     # В render_pixels передаем только параметры командной строки, остальные - по умолчанию.
-    pixel_matrix = render_pixels(afins_transform_list)
+    pixel_matrix = render_pixels(afins_transform_list, x_res, y_res, transform_mode, num_iter)
 
     if pixel_matrix:
         correction(pixel_matrix)
-        draw_points(pixel_matrix)
+        draw_points(pixel_matrix, x_res, y_res)
     else:
         print 'Не получилось подобрать коэффициенты. Попробуйте еще раз.'
+        return False
 
     s = raw_input('Сохранить? Y/N')
 
