@@ -348,31 +348,15 @@ def main():
 
     # если есть параметр type, то задаем тип преобразования (по умолчанию 0 - линейный)
     transform_mode = args.type if args.type else 0
-    # if args.type:
-    #     transform_mode = args.type
-    # else:
-    #     transform_mode = 0
 
     # если есть параметр i, то задаем количество итераций
     num_iter = args.i if args.i else 1000
-    # if args.i:
-    #     num_iter = args.i
-    # else:
-    #     num_iter = 1000
 
     # если есть параметр -x, то задаем размер изображения по оси Х
     x_res = args.x if args.x else 888
-    # if args.x:
-    #     x_res = args.x
-    # else:
-    #     x_res = 888
 
     # если есть параметр -y, то задаем размер изображения по оси Y
     y_res = args.y if args.y else 500
-    # if args.y:
-    #     y_res = args.y
-    # else:
-    #     y_res = 500
 
     # Получаем матрицу свойств пикселей. Результат м.б. False если не удалось вычислить коэффициенты.
     # В render_pixels передаем только параметры командной строки, остальные - по умолчанию.
