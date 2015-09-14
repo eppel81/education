@@ -11,7 +11,7 @@ import random
 # функция для подсчета рейтинга встречающихся слов в строке
 def string_parser(str_for_parse):
     """
-    Функция возвращает список кортежей (слово : сколько раз встречается)
+    Функция возвращает список кортежей (слово, частота)
 
     """
     words = re.findall(r'\w+', str_for_parse.lower())
@@ -41,7 +41,8 @@ def text_drawer(text, x, y, **colors):
 def circle_chart_drawer(words_list):
     """
 
-    Функция отрисоввывает круговую жиаграмму
+    Функция отрисоввывает круговую жиаграмму.
+    В качестве параметра получает список кортежей (слово, частота)
     """
     radius = 200
 
@@ -85,6 +86,55 @@ def circle_chart_drawer(words_list):
         # i нужна для междустрочного интервала в легенде
         i += 1
 
+def ray_chart_drawer(words_list):
+    """
+
+    Рисует диаграмму лучами.
+    В качестве параметра получает список кортежей (слово, частота)
+    """
+
+    # длина одного луча
+    ray_length = 100
+
+    # считаем сколько РАЗНЫХ слов - нужно для расчета углов
+    amount = len(words_list)
+
+    turtle.colormode(255)
+    turtle.speed(10)
+    turtle.pensize(3)
+
+    # начальный угол для первого луча
+    angle = 0
+
+    for word in words_list:
+        for count_words in range(word[1]):
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+            turtle.pencolor(r, g, b)
+
+            turtle.forward(ray_length)
+            turtle.circle(3)
+
+        # сразу создаем легенду
+        x, y = turtle.pos()
+
+        # немного свигаем координаты для легенды
+        x = x - 20 if x < 0 else x + 20
+        y = y - 20 if y < 0 else y + 20
+
+        # Пишем текст легенды. Параметры rgb передаются как словарь (**dict)
+        text_drawer(word[0], x, y, r=r, g=g, b=b)
+
+        turtle.penup()
+        turtle.home()
+        turtle.pendown()
+
+        # угол для всех лучей одинаков относительно соседних лучей
+        angle += 360/amount
+
+        turtle.setheading(angle)
+
 
 def main(text, type_diagr=1):
     """
@@ -97,10 +147,12 @@ def main(text, type_diagr=1):
     # рисуем диаграмму ( 1 - круговая, 2 - лучевая
     if type_diagr == 1:
         circle_chart_drawer(words_count_list)
+    else:
+        ray_chart_drawer(words_count_list)
 
     raw_input('Press any key')
 
 
 if __name__ == '__main__':
     tmp = 'hello, world! hello world nice to meet you, world'
-    main(tmp)
+    main(tmp, 2)
