@@ -38,6 +38,26 @@ def text_drawer(text, x, y, **colors):
     turtle.write(text, True, font=('Arial', 12, 'normal'))
 
 
+def init_turtle():
+    """
+    Стартовые настройки для рисования
+    """
+    turtle.colormode(255)
+    turtle.speed(10)
+    turtle.pensize(3)
+
+
+def get_random_color():
+    """
+    Функция возвращает список случайных значений компонентов r g b цвета
+    """
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+
+    return r, g, b
+
+
 def circle_chart_drawer(words_list):
     """
 
@@ -49,24 +69,22 @@ def circle_chart_drawer(words_list):
     # считаем сколько всего слов - нужно для расчета углов
     amount = sum(map(lambda item: item[1], words_list))
 
-    turtle.colormode(255)
-    turtle.speed(10)
+    init_turtle()
 
     i = 0
 
     # сохраняем текущие координаты начала дуги
     curr_pos = (0, -radius)
     for word in words_list:
-        r = random.randint(0, 255)
-        g = random.randint(0, 255)
-        b = random.randint(0, 255)
+        r, g, b = get_random_color()
 
         # устанавливаем цвет, выбранный случайным образом
+        turtle.pencolor(r, g, b)
         turtle.fillcolor(r, g, b)
 
-        turtle.penup()
+        # turtle.penup()
         turtle.goto(curr_pos)
-        turtle.pendown()
+        # turtle.pendown()
         turtle.begin_fill()
 
         # угол расчитываем исходя из общего количества слов (amount)
@@ -78,10 +96,10 @@ def circle_chart_drawer(words_list):
         # центр диаграммы в [0, 0]
         turtle.goto(0, 0)
         turtle.end_fill()
-        # color_list.append(turtle.fillcolor())
 
         # сразу и легенду отрисовываем по этому слову. Параметры rgb передаются как словарь (**dict)
-        text_drawer(word[0] + ' - ' + str(word[1]) + ' time(-s)', radius + 50, radius - i*30, r=r, g=g, b=b)
+        # text_drawer(word[0] + ' - ' + str(word[1]) + ' time(-s)', radius + 50, radius - i*30, r=r, g=g, b=b)
+        text_drawer('%s - %d time(-s)' % (word[0], word[1]), radius + 50, radius - i*30, r=r, g=g, b=b)
 
         # i нужна для междустрочного интервала в легенде
         i += 1
@@ -99,18 +117,16 @@ def ray_chart_drawer(words_list):
     # считаем сколько РАЗНЫХ слов - нужно для расчета углов
     amount = len(words_list)
 
-    turtle.colormode(255)
-    turtle.speed(10)
-    turtle.pensize(3)
+    init_turtle()
 
     # начальный угол для первого луча
     angle = 0
 
     for word in words_list:
         for count_words in range(word[1]):
-            r = random.randint(0, 255)
-            g = random.randint(0, 255)
-            b = random.randint(0, 255)
+
+            # устанавливаем цвет, выбранный случайным образом
+            r, g, b = get_random_color()
             turtle.pencolor(r, g, b)
 
             turtle.forward(ray_length)
@@ -155,4 +171,4 @@ def main(text, type_diagr=1):
 
 if __name__ == '__main__':
     tmp = 'hello, world! hello world nice to meet you, world'
-    main(tmp, 2)
+    main(tmp, 1)
